@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS books(
+    id TEXT PRIMARY KEY,
+    author TEXT NOT NULL,
+    genre TEXT NOT NULL,
+    title TEXT NOT NULL UNIQUE
+);
+CREATE INDEX IF NOT EXISTS idx_title ON books(title);
+
+CREATE TABLE IF NOT EXISTS users(
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    pass_hash BYTEA NOT NULL,
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE
+);
+CREATE INDEX IF NOT EXISTS idx_email ON users (email);

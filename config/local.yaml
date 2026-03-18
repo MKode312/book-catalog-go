@@ -1,0 +1,12 @@
+env: "local" # local, dev, prod
+token_ttl: 20m
+http_server:
+  address: "0.0.0.0:8082"
+  timeout: 4s
+  idle_timeout: 60s
+postgres:
+  port: 5432
+  host: "books-db"
+  name: "booksdb"
+  user: "mkode312"
+  password: "crusader30803"
