@@ -19,6 +19,7 @@ import (
 	"book_catalog/internal/lib/logger/handlers/slogpretty"
 	"book_catalog/internal/lib/logger/sl"
 	"book_catalog/internal/storage/postgres"
+	rediscache "book_catalog/internal/storage/redis"
 	"context"
 	"log/slog"
 	"net/http"
@@ -44,9 +45,15 @@ func main() {
 
 	log.Info("starting book-catalog", slog.String("env", cfg.Env))
 
-	storage, err := postgres.New(context.Background(), cfg.PostgresConfig.DBurl)
+	storage, err := postgrestorage.New(context.Background(), cfg.Postgres.DBurl)
 	if err != nil {
 		log.Error("failed to init storage", sl.Err(err))
+		os.Exit(1)
+	}
+
+	cache, err := rediscache.New(context.Background(), cfg.Redis.Address, cfg.Redis.TTL)
+	if err != nil {
+		log.Error("failed to init cache", sl.Err(err))
 		os.Exit(1)
 	}
 
@@ -70,8 +77,8 @@ func main() {
 
 		r.Delete("/api/deleteUser", deleteuser.New(context.Background(), log, storage))
 		
-		r.Get("/api/bookById/{bookID}", getbyid.New(context.Background(), log, storage))
-		r.Get("/api/book", getbytitle.New(context.Background(), log, storage))
+		r.Get("/api/bookById/{bookID}", getbyid.New(context.Background(), log, storage, cache, cache))
+		r.Get("/api/book", getbytitle.New(context.Background(), log, storage, cache, cache))
 		r.Get("/api/books/all", getall.New(context.Background(), log, storage))
 	    r.Get("/api/books/genre", getbygenre.New(context.Background(), log, storage))
 		r.Get("/api/books/author", getbyauthor.New(context.Background(), log, storage))
@@ -79,19 +86,19 @@ func main() {
 		r.Group(func(rout chi.Router) {
 			rout.Use(isAdminMiddleware)
 			
-			rout.Post("/api/book/save", save.New(context.Background(), log, storage))
+			rout.Post("/api/book/save", save.New(context.Background(), log, storage, cache))
 			rout.Delete("/api/book/{bookID}", deletebyid.New(context.Background(), log, storage))
 		})
 	})
 
 
-	log.Info("starting server...", slog.String("address", cfg.Address))
+	log.Info("starting server...", slog.String("address", cfg.HTTPServer.Address))
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	srv := &http.Server{
-		Addr:         cfg.Address,
+		Addr:         cfg.HTTPServer.Address,
 		Handler:      router,
 		ReadTimeout:  cfg.HTTPServer.Timeout,
 		WriteTimeout: cfg.HTTPServer.Timeout,
@@ -107,7 +114,7 @@ func main() {
 	log.Info("server started")
 
 	<-done
-	log.Info("stopping server")
+	log.Info("stopping server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

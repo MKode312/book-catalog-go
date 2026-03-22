@@ -13,7 +13,8 @@ type Config struct {
 	Env string `yaml:"env" env-default:"local"`
 	TokenTTL time.Duration `yaml:"token_ttl" env-default:"20m"`
 	HTTPServer `yaml:"http_server"`
-	PostgresConfig `yaml:"postgres"`
+	Postgres `yaml:"postgres"`
+	Redis `yaml:"redis"`
 }
 
 type HTTPServer struct {
@@ -22,13 +23,18 @@ type HTTPServer struct {
 	IdleTimeout time.Duration `yaml:"idle_timeout" env-default:"60s"`
 }
 
-type PostgresConfig struct {
+type Postgres struct {
 	Port     int    `yaml:"port" env-required:"true"`
 	Name     string `yaml:"name" env-required:"true"`
 	User     string `yaml:"user" env-required:"true"`
 	Password string `yaml:"password" env-required:"true"`
 	Host     string `yaml:"host" env-required:"true"`
 	DBurl    string
+}
+
+type Redis struct {
+	Address string `yaml:"address" env-default:"0.0.0.0:6379"`
+	TTL time.Duration `yaml:"ttl" env-default:"5m"`
 }
 
 func MustLoad() *Config {
@@ -40,7 +46,7 @@ func MustLoad() *Config {
 
 	cfg := MustLoadByPath(path)
 
-	cfg.PostgresConfig.DBurl = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", cfg.PostgresConfig.User, cfg.PostgresConfig.Password, cfg.PostgresConfig.Host, cfg.PostgresConfig.Port, cfg.PostgresConfig.Name)
+	cfg.Postgres.DBurl = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", cfg.Postgres.User, cfg.Postgres.Password, cfg.Postgres.Host, cfg.Postgres.Port, cfg.Postgres.Name)
 
 	return cfg
 }

@@ -21,7 +21,7 @@ func main() {
 
 	cfg := config.MustLoad()
 
-	conn, err := pgx.Connect(context.Background(), cfg.PostgresConfig.DBurl)
+	conn, err := pgx.Connect(context.Background(), cfg.Postgres.DBurl)
 	if err != nil {
 		panic(err)
 	}
@@ -29,7 +29,7 @@ func main() {
 
 	m, err := migrate.New(
 		"file://"+migrationsPath,
-		cfg.PostgresConfig.DBurl,
+		cfg.Postgres.DBurl,
 	)
 	if err != nil {
 		panic(err)

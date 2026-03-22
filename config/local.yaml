@@ -10,3 +10,6 @@ postgres:
   name: "booksdb"
   user: "mkode312"
   password: "crusader30803"
+redis:
+  address: "books-cache:6379"
+  ttl: 5m

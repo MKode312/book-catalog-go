@@ -1,4 +1,4 @@
-package postgres
+package postgrestorage
 
 import (
 	"book_catalog/internal/domain/models"

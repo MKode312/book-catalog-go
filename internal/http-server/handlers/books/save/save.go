@@ -1,6 +1,7 @@
 package save
 
 import (
+	"book_catalog/internal/domain/models"
 	resp "book_catalog/internal/lib/api/response"
 	"book_catalog/internal/lib/logger/sl"
 	"book_catalog/internal/storage"
@@ -14,8 +15,12 @@ import (
 	"github.com/go-playground/validator"
 )
 
-type BookSaver interface {
+type BookSaverStorage interface {
 	SaveBook(ctx context.Context, author string, title string, genre string) (id string, err error)
+}
+
+type BookSaverCache interface {
+	SaveBook(ctx context.Context, book models.Book) (err error) 
 }
 
 type Request struct {
@@ -29,7 +34,7 @@ type Response struct {
 	ID string `json:"ID"`
 }
 
-func New(ctx context.Context, log *slog.Logger, bookSaver BookSaver) http.HandlerFunc {
+func New(ctx context.Context, log *slog.Logger, bookSaverStorage BookSaverStorage, bookSaverCache BookSaverCache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.Book.Save.New"
 
@@ -63,9 +68,9 @@ func New(ctx context.Context, log *slog.Logger, bookSaver BookSaver) http.Handle
 		title := req.Title
 		genre := req.Genre
 
-		log.Info("saving book...")
+		log.Info("saving book to the storage...")
 
-		id, err := bookSaver.SaveBook(ctx, author, title, genre)
+		id, err := bookSaverStorage.SaveBook(ctx, author, title, genre)
 		if err != nil {
 			if errors.Is(err, storage.ErrBookExists) {
 				log.Error("book already exists")
@@ -74,13 +79,29 @@ func New(ctx context.Context, log *slog.Logger, bookSaver BookSaver) http.Handle
 				return
 			}
 
-			log.Error("internal error")
+			log.Error("internal error", sl.Err(err))
 			w.WriteHeader(http.StatusInternalServerError)
 			render.JSON(w, r, resp.Error("Unknown error"))
 			return
 		}
 
-		log.Info("book was saved")
+		log.Info("book was saved to the storage")
+
+		book := models.Book{
+			ID: id,
+			Author: author,
+			Title: title,
+			Genre: genre,
+		}
+
+		log.Info("adding book to the cache...")
+
+		if err := bookSaverCache.SaveBook(ctx, book); err != nil {
+			log.Error("failed to add book to the cache", sl.Err(err))
+		}
+
+		log.Info("book was added to the cache")
+
 		w.WriteHeader(http.StatusCreated)
 		render.JSON(w, r, Response{
 			Response: resp.OK(),
