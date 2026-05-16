@@ -94,6 +94,10 @@ func (s *Storage) GetBookByID(ctx context.Context, id string) (book models.Book,
 		return models.Book{}, fmt.Errorf("%s: %w", op, err)
 	}
 
+	book.Author = convert.ToSpaceCase(book.Author)
+	book.Title = convert.ToSpaceCase(book.Title)
+	book.Genre = convert.ToSpaceCase(book.Genre)
+
 	
 	return book, nil
 }
@@ -125,6 +129,10 @@ func (s *Storage) GetBookByTitle(ctx context.Context, title string) (book models
 		}
 		return models.Book{}, fmt.Errorf("%s: %w", op, err)
 	}
+
+	book.Author = convert.ToSpaceCase(book.Author)
+	book.Title = convert.ToSpaceCase(book.Title)
+	book.Genre = convert.ToSpaceCase(book.Genre)
 
 	
 	return book, nil
@@ -165,6 +173,9 @@ func (s *Storage) GetBooksByAuthor(ctx context.Context, author string) (books []
 			}
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
+		book.Author = convert.ToSpaceCase(book.Author)
+		book.Title = convert.ToSpaceCase(book.Title)
+		book.Genre = convert.ToSpaceCase(book.Genre)
 		books = append(books, book)
 	}
 
@@ -204,6 +215,9 @@ func (s *Storage) GetBooksByGenre(ctx context.Context, genre string) (books []mo
 		if err := rows.Scan(&book.ID, &book.Genre, &book.Title, &book.Author); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
+		book.Author = convert.ToSpaceCase(book.Author)
+		book.Title = convert.ToSpaceCase(book.Title)
+		book.Genre = convert.ToSpaceCase(book.Genre)
 		books = append(books, book)
 	}
 
@@ -251,6 +265,9 @@ func (s *Storage) GetAllBooks(ctx context.Context) ([]models.Book, error) {
             finalErr = err
             return nil, fmt.Errorf("%s: %w", op, err)
         }
+		book.Author = convert.ToSpaceCase(book.Author)
+		book.Title = convert.ToSpaceCase(book.Title)
+		book.Genre = convert.ToSpaceCase(book.Genre)
         books = append(books, book)
     }
 

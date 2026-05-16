@@ -1,6 +1,7 @@
 package MWIsadmin
 
 import (
+	"book_catalog/internal/http-server/middleware/authredirect"
 	resp "book_catalog/internal/lib/api/response"
 	jwtValidation "book_catalog/internal/lib/jwt"
 	"log/slog"
@@ -17,12 +18,10 @@ func New(log *slog.Logger) func(next http.Handler) http.Handler {
 	log.Info("is_admin middleware enabled")
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			//TODO: Redirect user to login page if cookie is not found
 			cookie, err := r.Cookie("auth_token")
 			if err != nil {
 				log.Error("cookie not found")
-				w.WriteHeader(http.StatusForbidden)
-				render.JSON(w, r, resp.Error("Cookie not found"))
+				authredirect.ToLogin(w, r)
 				return
 			}
 

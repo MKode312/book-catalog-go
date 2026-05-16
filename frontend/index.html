@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Book Catalog</title>
+    <link rel="stylesheet" href="style.css?v=20260516-5" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Auth Section -->
+      <div id="authSection" class="container">
+        <div class="auth-container">
+          <div class="auth-toggle">
+            <button id="loginTabBtn" class="tab-btn active" onclick="switchAuthTab('login')">Вход</button>
+            <button id="registerTabBtn" class="tab-btn" onclick="switchAuthTab('register')">Регистрация</button>
+          </div>
+
+          <!-- Login Form -->
+          <form id="loginForm" class="auth-form active" autocomplete="off">
+            <h2>Войти в аккаунт</h2>
+            <div class="form-group">
+              <label for="loginEmail">Email</label>
+              <input
+                type="email"
+                id="loginEmail"
+                name="login_email_field"
+                autocomplete="off"
+                autocapitalize="none"
+                spellcheck="false"
+                required />
+            </div>
+            <div class="form-group">
+              <label for="loginPassword">Пароль</label>
+              <input
+                type="text"
+                id="loginPassword"
+                name="login_secret_field"
+                class="secret-input"
+                autocomplete="off"
+                autocapitalize="none"
+                spellcheck="false"
+                required />
+            </div>
+            <button type="submit" class="btn btn-primary">Войти</button>
+            <div id="loginError" class="error-message"></div>
+          </form>
+
+          <!-- Register Form -->
+          <form id="registerForm" class="auth-form" autocomplete="off">
+            <h2>Создать аккаунт</h2>
+            <div class="form-group">
+              <label for="registerEmail">Email</label>
+              <input
+                type="email"
+                id="registerEmail"
+                name="register_email_field"
+                autocomplete="off"
+                autocapitalize="none"
+                spellcheck="false"
+                required />
+            </div>
+            <div class="form-group">
+              <label for="registerPassword">Пароль</label>
+              <input
+                type="text"
+                id="registerPassword"
+                name="register_secret_field"
+                class="secret-input"
+                autocomplete="off"
+                autocapitalize="none"
+                spellcheck="false"
+                required />
+            </div>
+            <div class="form-group">
+              <label for="registerConfirmPassword">Повторите пароль</label>
+              <input
+                type="text"
+                id="registerConfirmPassword"
+                name="register_secret_confirm_field"
+                class="secret-input"
+                autocomplete="off"
+                autocapitalize="none"
+                spellcheck="false"
+                required />
+            </div>
+            <label class="checkbox-row">
+              <input type="checkbox" id="registerAsAdmin" />
+              <span>Зарегистрировать администратора</span>
+            </label>
+            <div id="adminSecretGroup" class="form-group hidden">
+              <label for="adminSecret">Секрет администратора</label>
+              <input
+                type="text"
+                id="adminSecret"
+                name="admin_secret_field"
+                class="secret-input"
+                autocomplete="off"
+                autocapitalize="none"
+                spellcheck="false" />
+            </div>
+            <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+            <div id="registerError" class="error-message"></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Main App Section -->
+      <div id="mainSection" class="container" style="display: none">
+        <!-- Header -->
+        <header class="header">
+          <div class="header-content">
+            <h1>Каталог книг</h1>
+            <div class="header-actions">
+              <span id="userEmail" class="user-email"></span>
+              <button id="adminBtn" class="btn btn-secondary" style="display: none" onclick="showAdminPanel()">
+                Админ-панель
+              </button>
+              <button id="deleteUserBtn" class="btn btn-danger" onclick="deleteCurrentUser()">Удалить аккаунт</button>
+              <button id="logoutBtn" class="btn btn-danger" onclick="logout()">Выйти</button>
+            </div>
+          </div>
+        </header>
+
+        <!-- Search and Filter Section -->
+        <section class="search-section">
+          <div class="search-filters">
+            <div class="search-box">
+              <input type="text" id="searchInput" placeholder="Название, автор или жанр" />
+              <button onclick="performSearch()" class="btn btn-search">Найти</button>
+            </div>
+            <div class="filter-controls">
+              <button onclick="filterByTab('all')" class="filter-btn active" data-tab="all">Все книги</button>
+              <button onclick="filterByTab('byTitle')" class="filter-btn" data-tab="byTitle">По названию</button>
+              <button onclick="filterByTab('byAuthor')" class="filter-btn" data-tab="byAuthor">По автору</button>
+              <button onclick="filterByTab('byGenre')" class="filter-btn" data-tab="byGenre">По жанру</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Books Grid -->
+        <section class="books-section">
+          <div id="booksGrid" class="books-grid"></div>
+        </section>
+
+        <!-- Admin Panel -->
+        <div id="adminPanel" class="modal" style="display: none">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>Админ-панель</h2>
+              <button class="close-btn" onclick="closeAdminPanel()">&times;</button>
+            </div>
+            <form id="addBookForm" class="book-form">
+              <div class="form-group">
+                <label for="bookTitle">Название</label>
+                <input type="text" id="bookTitle" required />
+              </div>
+              <div class="form-group">
+                <label for="bookAuthor">Автор</label>
+                <input type="text" id="bookAuthor" required />
+              </div>
+              <div class="form-group">
+                <label for="bookGenre">Жанр</label>
+                <input type="text" id="bookGenre" required />
+              </div>
+              <button type="submit" class="btn btn-primary">Добавить книгу</button>
+              <div id="addBookError" class="error-message"></div>
+            </form>
+
+            <!-- Books Management Table -->
+            <div class="books-management">
+              <h3>Управление книгами</h3>
+              <div id="booksTable" class="books-table"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Book Details Modal -->
+        <div id="bookDetailsModal" class="modal" style="display: none">
+          <div class="modal-content book-details-modal">
+            <div class="modal-header">
+              <h2 id="detailTitle">Книга</h2>
+              <button class="close-btn" onclick="closeBookDetails()">&times;</button>
+            </div>
+            <div id="bookDetailsContent" class="book-details-content">
+              <!-- Content will be populated by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js?v=20260516-5"></script>
+  </body>
+</html>

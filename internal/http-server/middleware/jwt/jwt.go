@@ -1,13 +1,11 @@
 package MWJwt
 
 import (
-	resp "book_catalog/internal/lib/api/response"
+	"book_catalog/internal/http-server/middleware/authredirect"
 	jwtValidation "book_catalog/internal/lib/jwt"
 	"book_catalog/internal/lib/logger/sl"
 	"log/slog"
 	"net/http"
-
-	"github.com/go-chi/render"
 )
 
 func New(log *slog.Logger) func(next http.Handler) http.Handler {
@@ -21,8 +19,7 @@ func New(log *slog.Logger) func(next http.Handler) http.Handler {
 			cookie, err := r.Cookie("auth_token")
 			if err != nil {
 				log.Error("cookie not found")
-				w.WriteHeader(http.StatusUnauthorized)
-				render.JSON(w, r, resp.Error("User is not authorized"))
+				authredirect.ToLogin(w, r)
 				return
 			}
 
@@ -30,8 +27,7 @@ func New(log *slog.Logger) func(next http.Handler) http.Handler {
 
 			if err := jwtValidation.ValidateToken(token); err != nil {
 				log.Error("validation jwt error", sl.Err(err))
-				w.WriteHeader(http.StatusUnauthorized)
-				render.JSON(w, r, resp.Error("User is not authorized"))
+				authredirect.ToLogin(w, r)
 				return
 			}
 

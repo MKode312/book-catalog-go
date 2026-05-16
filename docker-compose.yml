@@ -1,8 +1,18 @@
 services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - book-catalog
+    networks:
+      - books_net
+    restart: unless-stopped
 
   book-catalog:
-    container_name: book-catalog
-    command: sh -c "/app/migrator & /app/book-catalog wait"
+    command: sh -c "/app/migrator && /app/book-catalog"
     depends_on:
       books-db:
         condition: service_healthy
@@ -13,27 +23,22 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
-    tty: true
+    tty: true # optional, logs colour
     volumes:
       - ./config:/app/config:ro
       - ./migrations:/app/migrations:ro
-    ports:
-      - "8082:8082"
     networks:
       - books_net
-    restart: unless-stopped 
+    restart: unless-stopped
 
   books-db:
     image: postgres:15
-    container_name: books-db
     env_file:
       - .env
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    ports:
-      - "${DB_PORT}:5432"
     volumes:
       - books_postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -47,9 +52,6 @@ services:
 
   books-cache:
     image: redis:7-alpine
-    container_name: books-cache
-    ports:
-      - "6379:6379"
     networks:
       - books_net
     healthcheck:
@@ -58,10 +60,9 @@ services:
       timeout: 3s
       retries: 5
     restart: unless-stopped
-    
+
 networks:
   books_net:
 
-
-volumes: 
+volumes:
   books_postgres_data:

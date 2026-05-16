@@ -13,12 +13,13 @@ import (
 	"book_catalog/internal/http-server/handlers/user/login"
 	"book_catalog/internal/http-server/handlers/user/register"
 	registerasadmin "book_catalog/internal/http-server/handlers/user/registerAsAdmin"
+	"book_catalog/internal/http-server/middleware/cors"
 	MWIsadmin "book_catalog/internal/http-server/middleware/isAdmin"
 	MWJwt "book_catalog/internal/http-server/middleware/jwt"
 	MWLogger "book_catalog/internal/http-server/middleware/logger"
 	"book_catalog/internal/lib/logger/handlers/slogpretty"
 	"book_catalog/internal/lib/logger/sl"
-	"book_catalog/internal/storage/postgres"
+	postgrestorage "book_catalog/internal/storage/postgres"
 	rediscache "book_catalog/internal/storage/redis"
 	"context"
 	"log/slog"
@@ -59,6 +60,8 @@ func main() {
 
 	router := chi.NewRouter()
 
+	corsMiddleware := cors.New()
+	router.Use(corsMiddleware.Middleware)
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
 	router.Use(MWLogger.New(log))

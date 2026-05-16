@@ -17,3 +17,8 @@ func ToSnakeCase(s string) string {
 	re := regexp.MustCompile(`\s+`)
 	return re.ReplaceAllString(s, "_")
 }
+
+func ToSpaceCase(s string) string {
+	s = strings.ReplaceAll(s, "_", " ")
+	return s
+}
