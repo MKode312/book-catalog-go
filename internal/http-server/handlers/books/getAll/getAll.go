@@ -38,8 +38,11 @@ func New(ctx context.Context, log *slog.Logger, bookGetter BookGetter) http.Hand
 		if err != nil {
 			if errors.Is(err, storage.ErrNoBooksInTheStore) {
 				log.Error("no books in the store")
-				w.WriteHeader(http.StatusConflict)
-				render.JSON(w, r, resp.Error("No books in the store so far"))
+				w.WriteHeader(http.StatusOK)
+				render.JSON(w, r, Response{
+					Response: resp.OK(),
+					Books:    []models.Book{},
+				})
 				return
 			}
 
@@ -53,7 +56,7 @@ func New(ctx context.Context, log *slog.Logger, bookGetter BookGetter) http.Hand
 		w.WriteHeader(http.StatusOK)
 		render.JSON(w, r, Response{
 			Response: resp.OK(),
-			Books: books,
+			Books:    books,
 		})
 	}
 }

@@ -24,11 +24,11 @@ type HTTPServer struct {
 }
 
 type Postgres struct {
-	Port     int    `yaml:"port" env-required:"true"`
-	Name     string `yaml:"name" env-required:"true"`
-	User     string `yaml:"user" env-required:"true"`
-	Password string `yaml:"password" env-required:"true"`
-	Host     string `yaml:"host" env-required:"true"`
+	Port     int    `env:"DB_PORT" env-required:"true"`
+	Name     string `env:"DB_NAME" env-required:"true"`
+	User     string `env:"DB_USER" env-required:"true"`
+	Password string `env:"DB_PASSWORD" env-required:"true"`
+	Host     string `env:"DB_HOST" env-required:"true"`
 	DBurl    string
 }
 

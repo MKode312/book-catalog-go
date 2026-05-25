@@ -21,7 +21,7 @@ type UserProvider interface {
 }
 
 type Request struct {
-	Email string `json:"email" validate:"required"`
+	Email    string `json:"email" validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
 
@@ -90,18 +90,18 @@ func New(ctx context.Context, log *slog.Logger, tokenTTL time.Duration, userProv
 		}
 
 		http.SetCookie(w, &http.Cookie{
-			Name: "auth_token",
-			Value: token,
-			SameSite: http.SameSiteNoneMode,
+			Name:     "auth_token",
+			Value:    token,
+			SameSite: http.SameSiteLaxMode,
 			HttpOnly: true,
-			Path: "/",
+			Path:     "/",
 		})
 
 		log.Info("token was created")
 		w.WriteHeader(http.StatusOK)
 		render.JSON(w, r, Response{
 			Response: resp.OK(),
-			Token: token,
+			Token:    token,
 		})
 	}
 }

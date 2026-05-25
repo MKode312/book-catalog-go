@@ -20,7 +20,7 @@ type BookGetterByTitle interface {
 }
 
 type BookSaverCache interface {
-	SaveBook(ctx context.Context, book models.Book) (err error) 
+	SaveBook(ctx context.Context, book models.Book) (err error)
 }
 
 type Request struct {
@@ -41,13 +41,15 @@ func New(ctx context.Context, log *slog.Logger, bookGetterByTtileStorage BookGet
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		var req Request
+		req := Request{Title: r.URL.Query().Get("title")}
 
-		if err := render.DecodeJSON(r.Body, &req); err != nil {
-			log.Error("failed to decode request body", sl.Err(err))
-			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, resp.Error("Unknown error"))
-			return
+		if req.Title == "" {
+			if err := render.DecodeJSON(r.Body, &req); err != nil {
+				log.Error("failed to decode request body", sl.Err(err))
+				w.WriteHeader(http.StatusInternalServerError)
+				render.JSON(w, r, resp.Error("Unknown error"))
+				return
+			}
 		}
 
 		log.Info("request body decoded", slog.Any("request", req))
@@ -68,19 +70,19 @@ func New(ctx context.Context, log *slog.Logger, bookGetterByTtileStorage BookGet
 			if errors.Is(err, storage.ErrBookNotFound) {
 				log.Error("book not found, trying to find it in the store...")
 				book, err = bookGetterByTtileStorage.GetBookByTitle(ctx, req.Title)
-		        if err != nil {
+				if err != nil {
 					if errors.Is(err, storage.ErrBookNotFound) {
-					log.Error("book not found")
-					w.WriteHeader(http.StatusConflict)
-					render.JSON(w, r, resp.Error("Book not found"))
-					return
-				}
+						log.Error("book not found")
+						w.WriteHeader(http.StatusConflict)
+						render.JSON(w, r, resp.Error("Book not found"))
+						return
+					}
 
 					log.Error("internal error", sl.Err(err))
 					w.WriteHeader(http.StatusInternalServerError)
 					render.JSON(w, r, resp.Error("Unknown error"))
 					return
-			    }
+				}
 				log.Info("book was received from the store, adding it to the cache...")
 				if err = bookSaverCache.SaveBook(ctx, book); err != nil {
 					log.Error("failed to save book to the cache", sl.Err(err))
@@ -88,8 +90,8 @@ func New(ctx context.Context, log *slog.Logger, bookGetterByTtileStorage BookGet
 				log.Info("book was added to the cache")
 				w.WriteHeader(http.StatusOK)
 				render.JSON(w, r, Response{
-				Response: resp.OK(),
-				Book: book,
+					Response: resp.OK(),
+					Book:     book,
 				})
 				return
 			}
@@ -103,7 +105,7 @@ func New(ctx context.Context, log *slog.Logger, bookGetterByTtileStorage BookGet
 		w.WriteHeader(http.StatusOK)
 		render.JSON(w, r, Response{
 			Response: resp.OK(),
-			Book: book,
+			Book:     book,
 		})
 	}
 }

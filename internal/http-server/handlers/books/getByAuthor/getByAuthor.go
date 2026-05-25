@@ -32,19 +32,20 @@ func New(ctx context.Context, log *slog.Logger, bookGettreByAuthor BookGetterByA
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.Book.GetByAuthor.New"
 
-
-	    log = log.With(
+		log = log.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		var req Request
+		req := Request{Author: r.URL.Query().Get("author")}
 
-		if err := render.DecodeJSON(r.Body, &req); err != nil {
-			log.Error("failed to decode request body", sl.Err(err))
-			w.WriteHeader(http.StatusInternalServerError)
-			render.JSON(w, r, resp.Error("Unknown error"))
-			return
+		if req.Author == "" {
+			if err := render.DecodeJSON(r.Body, &req); err != nil {
+				log.Error("failed to decode request body", sl.Err(err))
+				w.WriteHeader(http.StatusInternalServerError)
+				render.JSON(w, r, resp.Error("Unknown error"))
+				return
+			}
 		}
 
 		log.Info("request body decoded", slog.Any("request", req))
@@ -79,7 +80,7 @@ func New(ctx context.Context, log *slog.Logger, bookGettreByAuthor BookGetterByA
 		w.WriteHeader(http.StatusOK)
 		render.JSON(w, r, Response{
 			Response: resp.OK(),
-			Books: books,
+			Books:    books,
 		})
 	}
 }

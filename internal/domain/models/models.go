@@ -1,15 +1,15 @@
 package models
 
 type Book struct {
-	ID string
-	Genre string 
-	Title string 
-	Author string
+	ID     string `json:"id"`
+	Genre  string `json:"genre"`
+	Title  string `json:"title"`
+	Author string `json:"author"`
 }
 
 type User struct {
-	ID string 
-	Email string
-	PassHash []byte 
-	IsAdmin bool
+	ID       string `json:"id"`
+	Email    string `json:"email"`
+	PassHash []byte `json:"-"`
+	IsAdmin  bool   `json:"is_admin"`
 }
